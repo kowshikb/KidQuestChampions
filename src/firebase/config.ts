@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
 
 // Use environment variables or globals
@@ -19,6 +20,7 @@ const firebaseConfig = typeof __firebase_config !== 'undefined'
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+const analytics = getAnalytics(app);
 
 // Get app_id from environment or fallback
 const APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'kidquest-champions-dev';
@@ -26,4 +28,4 @@ const APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'kidquest-champions-
 // Define the base path for all Firestore operations
 export const getBasePath = () => `/artifacts/${APP_ID}/public/data`;
 
-export { app, db, auth };
+export { app, db, auth, analytics };
