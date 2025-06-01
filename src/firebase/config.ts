@@ -6,13 +6,14 @@ import { getAuth } from "firebase/auth";
 const firebaseConfig = typeof __firebase_config !== 'undefined' 
   ? __firebase_config 
   : {
-      apiKey: "AIzaSyDummyKeyForDevelopment",
-      authDomain: "kidquest-champions.firebaseapp.com",
-      projectId: "kidquest-champions",
-      storageBucket: "kidquest-champions.appspot.com",
-      messagingSenderId: "123456789012",
-      appId: "1:123456789012:web:abcdefghijklmnopqrstuv"
-    };
+  apiKey: "AIzaSyBh2uPN5uAAxQarSeB3seAvLEAZB2c664Y",
+  authDomain: "kidquest-champions.firebaseapp.com",
+  projectId: "kidquest-champions",
+  storageBucket: "kidquest-champions.firebasestorage.app",
+  messagingSenderId: "595628100127",
+  appId: "1:595628100127:web:46b1ef80046ec10a51232a",
+  measurementId: "G-PY38V40WS5"
+};
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
