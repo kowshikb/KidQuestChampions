@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import useSound from 'use-sound'; // This line imports the useSound hook from the library
+import useSound from 'use-sound';
 
 interface SoundContextType {
   isSoundEnabled: boolean;
@@ -9,7 +9,6 @@ interface SoundContextType {
 
 type SoundType = 'click' | 'success' | 'error' | 'coin' | 'complete' | 'challenge';
 
-// Sounds are imported from URLs (CDN) to avoid embedding binary data
 const SOUND_URLS = {
   click: 'https://assets.mixkit.co/sfx/preview/mixkit-light-button-2580.mp3',
   success: 'https://assets.mixkit.co/sfx/preview/mixkit-game-level-completed-2059.mp3',
@@ -21,9 +20,9 @@ const SOUND_URLS = {
 
 const SoundContext = createContext<SoundContextType | undefined>(undefined);
 
-export function useSoundContext() {
+export function useSound() {
   const context = useContext(SoundContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useSound must be used within a SoundProvider');
   }
   return context;
@@ -39,12 +38,10 @@ export const SoundProvider: React.FC<SoundProviderProps> = ({ children }) => {
     return saved !== null ? JSON.parse(saved) : true;
   });
 
-  // Save sound preference to localStorage
   useEffect(() => {
     localStorage.setItem('kidquest-sound-enabled', JSON.stringify(isSoundEnabled));
   }, [isSoundEnabled]);
 
-  // Initialize sounds
   const [playClickSound] = useSound(SOUND_URLS.click, { volume: 0.5, soundEnabled: isSoundEnabled });
   const [playSuccessSound] = useSound(SOUND_URLS.success, { volume: 0.5, soundEnabled: isSoundEnabled });
   const [playErrorSound] = useSound(SOUND_URLS.error, { volume: 0.5, soundEnabled: isSoundEnabled });
@@ -89,6 +86,3 @@ export const SoundProvider: React.FC<SoundProviderProps> = ({ children }) => {
 
   return <SoundContext.Provider value={value}>{children}</SoundContext.Provider>;
 };
-
-// This is the correct and only export for your context hook as 'useSound'
-export { useSoundContext as useSound };
