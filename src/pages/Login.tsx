@@ -5,6 +5,7 @@ import { Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSound } from '../contexts/SoundContext';
 import { RecaptchaVerifier } from 'firebase/auth';
+import { auth } from '../firebase/config';
 
 const Login: React.FC = () => {
   const { currentUser, signInWithEmail, signInWithPhone, signInAnonymously, loading } = useAuth();
@@ -26,7 +27,7 @@ const Login: React.FC = () => {
   useEffect(() => {
     // Initialize reCAPTCHA verifier
     if (!recaptchaVerifier) {
-      const verifier = new RecaptchaVerifier('recaptcha-container', {
+      const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
         size: 'normal',
         callback: () => {
           // reCAPTCHA solved, allow signInWithPhoneNumber.
