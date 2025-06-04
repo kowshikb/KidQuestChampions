@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import useSound from 'use-sound';
+import { useSound as useSoundLib } from 'use-sound';
 
 interface SoundContextType {
   isSoundEnabled: boolean;
@@ -42,12 +42,12 @@ export const SoundProvider: React.FC<SoundProviderProps> = ({ children }) => {
     localStorage.setItem('kidquest-sound-enabled', JSON.stringify(isSoundEnabled));
   }, [isSoundEnabled]);
 
-  const [playClickSound] = useSound(SOUND_URLS.click, { volume: 0.5, soundEnabled: isSoundEnabled });
-  const [playSuccessSound] = useSound(SOUND_URLS.success, { volume: 0.5, soundEnabled: isSoundEnabled });
-  const [playErrorSound] = useSound(SOUND_URLS.error, { volume: 0.5, soundEnabled: isSoundEnabled });
-  const [playCoinSound] = useSound(SOUND_URLS.coin, { volume: 0.5, soundEnabled: isSoundEnabled });
-  const [playCompleteSound] = useSound(SOUND_URLS.complete, { volume: 0.5, soundEnabled: isSoundEnabled });
-  const [playChallengeSound] = useSound(SOUND_URLS.challenge, { volume: 0.5, soundEnabled: isSoundEnabled });
+  const [playClickSound] = useSoundLib(SOUND_URLS.click, { volume: 0.5, soundEnabled: isSoundEnabled });
+  const [playSuccessSound] = useSoundLib(SOUND_URLS.success, { volume: 0.5, soundEnabled: isSoundEnabled });
+  const [playErrorSound] = useSoundLib(SOUND_URLS.error, { volume: 0.5, soundEnabled: isSoundEnabled });
+  const [playCoinSound] = useSoundLib(SOUND_URLS.coin, { volume: 0.5, soundEnabled: isSoundEnabled });
+  const [playCompleteSound] = useSoundLib(SOUND_URLS.complete, { volume: 0.5, soundEnabled: isSoundEnabled });
+  const [playChallengeSound] = useSoundLib(SOUND_URLS.challenge, { volume: 0.5, soundEnabled: isSoundEnabled });
 
   const toggleSound = () => {
     setIsSoundEnabled(prev => !prev);
