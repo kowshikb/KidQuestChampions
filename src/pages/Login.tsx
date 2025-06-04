@@ -1,19 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Mail, Phone, UserPlus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSound } from '../contexts/SoundContext';
 import { RecaptchaVerifier } from 'firebase/auth';
 import { auth } from '../firebase/config';
 
 const Login: React.FC = () => {
-  const { currentUser, signInWithEmail, signInWithPhone, signInAnonymously, loading } = useAuth();
+  const { currentUser, signInWithEmail, signUpWithEmail, signInWithPhone, signInAnonymously, loading } = useAuth();
   const { playSound } = useSound();
   const navigate = useNavigate();
 
+  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
   const [recaptchaVerifier, setRecaptchaVerifier] = useState<RecaptchaVerifier | null>(null);
@@ -25,7 +27,6 @@ const Login: React.FC = () => {
   }, [currentUser, navigate]);
 
   useEffect(() => {
-    // Initialize reCAPTCHA verifier
     if (!recaptchaVerifier) {
       const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
         size: 'normal',
@@ -33,7 +34,6 @@ const Login: React.FC = () => {
           // reCAPTCHA solved, allow signInWithPhoneNumber.
         },
         'expired-callback': () => {
-          // Response expired. Ask user to solve reCAPTCHA again.
           setError('reCAPTCHA expired. Please try again.');
         }
       });
@@ -57,13 +57,30 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleEmailLogin = async () => {
+  const handleEmailAuth = async () => {
     playSound('click');
     setError('');
-    try {
-      await signInWithEmail(email, password);
-    } catch (err: any) {
-      setError(err.message);
+
+    if (isSignUp) {
+      if (password !== confirmPassword) {
+        setError('Passwords do not match!');
+        return;
+      }
+      if (password.length < 6) {
+        setError('Password must be at least 6 characters long!');
+        return;
+      }
+      try {
+        await signUpWithEmail(email, password);
+      } catch (err: any) {
+        setError(err.message);
+      }
+    } else {
+      try {
+        await signInWithEmail(email, password);
+      } catch (err: any) {
+        setError(err.message);
+      }
     }
   };
 
@@ -78,6 +95,12 @@ const Login: React.FC = () => {
     } catch (err: any) {
       setError(err.message);
     }
+  };
+
+  const toggleAuthMode = () => {
+    playSound('click');
+    setIsSignUp(!isSignUp);
+    setError('');
   };
 
   return (
@@ -127,19 +150,28 @@ const Login: React.FC = () => {
         </div>
 
         <motion.div className="bg-white rounded-3xl shadow-xl p-8 border-4 border-purple-300" whileHover={{ y: -5 }}>
-          <h2 className="text-2xl font-bold text-center text-purple-900 mb-6">Choose Your Portal</h2>
+          <h2 className="text-2xl font-bold text-center text-purple-900 mb-6">
+            {isSignUp ? 'Create Your Account' : 'Choose Your Portal'}
+          </h2>
 
-          {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
+          {error && (
+            <div className="bg-red-50 border-2 border-red-200 rounded-lg p-3 mb-4">
+              <p className="text-red-600 text-sm text-center">{error}</p>
+            </div>
+          )}
 
-          {/* Email Sign-in */}
+          {/* Email Auth */}
           <div className="mb-4">
-            <input
-              type="email"
-              placeholder="Email"
-              className="w-full p-3 mb-2 border rounded-lg"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="email"
+                placeholder="Email"
+                className="w-full p-3 pl-10 mb-2 border rounded-lg"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
             <input
               type="password"
               placeholder="Password"
@@ -147,44 +179,87 @@ const Login: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <button onClick={handleEmailLogin} disabled={loading} className="btn-magic w-full py-2 mb-2">
-              {loading ? 'Logging in...' : 'Login with Email'}
-            </button>
-          </div>
-
-          {/* Phone Sign-in */}
-          <div className="mb-4">
-            <input
-              type="tel"
-              placeholder="+1234567890"
-              className="w-full p-3 mb-2 border rounded-lg"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-            <button onClick={handlePhoneLogin} disabled={loading} className="btn-magic w-full py-2 mb-2">
-              {loading ? 'Sending code...' : 'Login with Phone'}
-            </button>
-            <div id="recaptcha-container" className="flex justify-center mt-2" />
-          </div>
-
-          {/* Anonymous Sign-in */}
-          <button
-            onClick={handleAnonymousLogin}
-            disabled={loading}
-            className="btn-magic w-full py-4 text-lg mt-4"
-          >
-            {loading ? (
-              <span className="flex items-center justify-center">
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                Opening Portal...
-              </span>
-            ) : (
-              <span className="flex items-center justify-center">
-                <Sparkles size={18} className="mr-2" />
-                Continue Anonymously
-              </span>
+            {isSignUp && (
+              <input
+                type="password"
+                placeholder="Confirm Password"
+                className="w-full p-3 mb-2 border rounded-lg"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
             )}
+            <button 
+              onClick={handleEmailAuth} 
+              disabled={loading} 
+              className="btn-magic w-full py-2 mb-2"
+            >
+              <span className="flex items-center justify-center">
+                {loading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    {isSignUp ? 'Creating Account...' : 'Logging in...'}
+                  </>
+                ) : (
+                  <>
+                    {isSignUp ? <UserPlus size={18} className="mr-2" /> : <Mail size={18} className="mr-2" />}
+                    {isSignUp ? 'Sign Up with Email' : 'Login with Email'}
+                  </>
+                )}
+              </span>
+            </button>
+          </div>
+
+          {/* Toggle Auth Mode */}
+          <button
+            onClick={toggleAuthMode}
+            className="w-full text-purple-600 hover:text-purple-800 text-sm mb-4"
+          >
+            {isSignUp ? 'Already have an account? Log in' : 'Need an account? Sign up'}
           </button>
+
+          {!isSignUp && (
+            <>
+              {/* Phone Sign-in */}
+              <div className="mb-4">
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    type="tel"
+                    placeholder="+1234567890"
+                    className="w-full p-3 pl-10 mb-2 border rounded-lg"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </div>
+                <button onClick={handlePhoneLogin} disabled={loading} className="btn-magic w-full py-2 mb-2">
+                  <span className="flex items-center justify-center">
+                    <Phone size={18} className="mr-2" />
+                    {loading ? 'Sending code...' : 'Login with Phone'}
+                  </span>
+                </button>
+                <div id="recaptcha-container" className="flex justify-center mt-2" />
+              </div>
+
+              {/* Anonymous Sign-in */}
+              <button
+                onClick={handleAnonymousLogin}
+                disabled={loading}
+                className="btn-magic w-full py-4 text-lg mt-4"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Opening Portal...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center">
+                    <Sparkles size={18} className="mr-2" />
+                    Continue Anonymously
+                  </span>
+                )}
+              </button>
+            </>
+          )}
 
           <p className="text-sm text-gray-500 text-center mt-4">
             By entering, you agree to be awesome and have fun!
