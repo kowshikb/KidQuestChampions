@@ -20,16 +20,23 @@ const firebaseConfig = typeof __firebase_config !== 'undefined'
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Enable offline persistence
-enableIndexedDbPersistence(db).catch((err) => {
-  if (err.code === 'failed-precondition') {
-    // Multiple tabs open, persistence can only be enabled in one tab at a time
-    console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time');
-  } else if (err.code === 'unimplemented') {
-    // The current browser doesn't support persistence
-    console.warn('The current browser doesn\'t support persistence');
-  }
-});
+// Create a promise that resolves when persistence is ready
+export const persistenceReadyPromise = enableIndexedDbPersistence(db)
+  .then(() => {
+    console.log('IndexedDB persistence initialized successfully');
+    return true;
+  })
+  .catch((err) => {
+    if (err.code === 'failed-precondition') {
+      // Multiple tabs open, persistence can only be enabled in one tab at a time
+      console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time');
+    } else if (err.code === 'unimplemented') {
+      // The current browser doesn't support persistence
+      console.warn('The current browser doesn\'t support persistence');
+    }
+    // Even if persistence fails, we want to continue with online-only mode
+    return false;
+  });
 
 const auth = getAuth(app);
 const analytics = getAnalytics(app);
