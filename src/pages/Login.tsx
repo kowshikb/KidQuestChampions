@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSound } from '../contexts/SoundContext';
+import { RecaptchaVerifier } from 'firebase/auth';
 
 const Login: React.FC = () => {
   const { currentUser, signInWithEmail, signInWithPhone, signInAnonymously, loading } = useAuth();
@@ -14,12 +15,36 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
+  const [recaptchaVerifier, setRecaptchaVerifier] = useState<RecaptchaVerifier | null>(null);
 
   useEffect(() => {
     if (currentUser) {
       navigate('/dashboard');
     }
   }, [currentUser, navigate]);
+
+  useEffect(() => {
+    // Initialize reCAPTCHA verifier
+    if (!recaptchaVerifier) {
+      const verifier = new RecaptchaVerifier('recaptcha-container', {
+        size: 'normal',
+        callback: () => {
+          // reCAPTCHA solved, allow signInWithPhoneNumber.
+        },
+        'expired-callback': () => {
+          // Response expired. Ask user to solve reCAPTCHA again.
+          setError('reCAPTCHA expired. Please try again.');
+        }
+      });
+      setRecaptchaVerifier(verifier);
+    }
+
+    return () => {
+      if (recaptchaVerifier) {
+        recaptchaVerifier.clear();
+      }
+    };
+  }, []);
 
   const handleAnonymousLogin = async () => {
     playSound('click');
@@ -45,7 +70,10 @@ const Login: React.FC = () => {
     playSound('click');
     setError('');
     try {
-      await signInWithPhone(phone); // Make sure reCAPTCHA is set up in AuthContext
+      if (!recaptchaVerifier) {
+        throw new Error('reCAPTCHA not initialized');
+      }
+      await signInWithPhone(phone, recaptchaVerifier);
     } catch (err: any) {
       setError(err.message);
     }
@@ -135,7 +163,7 @@ const Login: React.FC = () => {
             <button onClick={handlePhoneLogin} disabled={loading} className="btn-magic w-full py-2 mb-2">
               {loading ? 'Sending code...' : 'Login with Phone'}
             </button>
-            <div id="recaptcha-container" className="mt-2" />
+            <div id="recaptcha-container" className="flex justify-center mt-2" />
           </div>
 
           {/* Anonymous Sign-in */}
